@@ -1,0 +1,324 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Warm ivory · Deep teal · Coral orange */
+  --ivory: #f3ebe0;
+  --ivory-deep: #e8dccb;
+  --ivory-soft: #faf6f0;
+  --teal: #0b4f54;
+  --teal-deep: #083b3f;
+  --teal-soft: #14686e;
+  --coral: #e85d4c;
+  --coral-soft: #f07868;
+  --ink: #1a2424;
+  --muted: #6a7373;
+  --rack: #2a3333;
+  --wood: #c4a574;
+  --shelf: #8b6b45;
+  --background: var(--ivory);
+  --foreground: var(--ink);
+  --border: rgba(11, 79, 84, 0.12);
+  --accent: var(--teal);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background:
+    radial-gradient(900px 480px at 50% 0%, rgba(255, 255, 255, 0.55), transparent 55%),
+    linear-gradient(180deg, var(--ivory-soft) 0%, var(--ivory) 40%, var(--ivory-deep) 100%);
+  font-family: var(--font-body), sans-serif;
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--teal);
+  color: #fff;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /*
+   * Original studio stage (no wall photo) — soft ink / coral wash so
+   * hanging product cutouts stay the hero.
+   */
+  .store-wall {
+    background:
+      radial-gradient(90% 55% at 50% -8%, rgba(255, 248, 238, 0.9), transparent 55%),
+      radial-gradient(48% 42% at 8% 88%, rgba(232, 93, 76, 0.09), transparent 62%),
+      radial-gradient(52% 40% at 92% 78%, rgba(20, 104, 110, 0.11), transparent 60%),
+      linear-gradient(165deg, #f4ebe1 0%, #e8ddd0 42%, #ddd2c4 100%);
+    box-shadow:
+      0 28px 64px rgba(30, 24, 18, 0.12),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  }
+
+  .store-wall-atmosphere {
+    pointer-events: none;
+    background:
+      radial-gradient(60% 36% at 50% 18%, rgba(255, 255, 255, 0.28), transparent 70%),
+      linear-gradient(
+        180deg,
+        rgba(255, 252, 246, 0.2) 0%,
+        transparent 26%,
+        transparent 72%,
+        rgba(8, 59, 63, 0.08) 100%
+      );
+  }
+
+  .store-wall-grain {
+    pointer-events: none;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+    mix-blend-mode: soft-light;
+  }
+
+  /* White PNG fringe dissolves into the light stage; fabric stays */
+  .mix-blend-mode-darken {
+    mix-blend-mode: darken;
+  }
+
+  /* Shirts — luxury studio cyclorama (reference curved-rail look) */
+  .shirt-studio {
+    background: #ebe4d8;
+  }
+
+  .shirt-studio-atmosphere {
+    pointer-events: none;
+    background:
+      radial-gradient(70% 45% at 78% 18%, rgba(255, 255, 255, 0.42), transparent 58%),
+      radial-gradient(55% 40% at 12% 70%, rgba(8, 59, 63, 0.06), transparent 60%),
+      linear-gradient(180deg, rgba(243, 235, 224, 0.08) 0%, transparent 28%, transparent 58%, rgba(8, 59, 63, 0.1) 100%);
+  }
+
+  .shirt-studio-plate {
+    background: rgba(250, 246, 240, 0.72);
+    backdrop-filter: blur(18px) saturate(1.15);
+    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  }
+
+  /* Nike Virtual Store room — cyclorama depth */
+  .virtual-room {
+    background: #f0efea;
+    box-shadow:
+      0 40px 90px rgba(0, 0, 0, 0.16),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  }
+
+  .virtual-room-wall {
+    background:
+      radial-gradient(88% 48% at 50% -4%, rgba(255, 255, 255, 1), transparent 58%),
+      radial-gradient(70% 40% at 18% 72%, rgba(0, 0, 0, 0.035), transparent 55%),
+      radial-gradient(70% 40% at 82% 72%, rgba(0, 0, 0, 0.035), transparent 55%),
+      linear-gradient(180deg, #f8f7f3 0%, #f0efea 42%, #e6e3dc 78%, #ddd9d1 100%);
+  }
+
+  /* New Season Drop — full room photo (HQ). Soft vignette only; no fake wall card. */
+  .drop-room-wall {
+    /* Match wide plaster so no fake side panels show through */
+    background: #e8dfd2;
+  }
+
+  .drop-room-photo {
+    /* Wide front wall fills the frame edge-to-edge (vase stays right) */
+    object-fit: cover;
+    object-position: center 55%;
+    transform: none;
+  }
+
+  /* Soft atmosphere — keep edges clean, no muddy side bars */
+  .drop-room-atmosphere {
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 16%, transparent 78%, rgba(30, 24, 18, 0.14) 100%);
+  }
+
+  /* Deprecated fake frame — keep empty so old class refs don't break */
+  .drop-room-rear {
+    display: none;
+  }
+
+  .drop-room-side-left,
+  .drop-room-side-right {
+    display: none;
+  }
+
+  .drop-room-floor {
+    display: none;
+  }
+
+  .virtual-room-floor {
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.045) 28%,
+      rgba(0, 0, 0, 0.1) 72%,
+      rgba(0, 0, 0, 0.14) 100%
+    );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+
+  /* Soft cast on plaster behind each garment */
+  .rack-wall-shadow {
+    width: 100px;
+    height: 90%;
+    background: radial-gradient(
+      48% 55% at 50% 38%,
+      rgba(35, 28, 20, 0.42) 0%,
+      rgba(35, 28, 20, 0.18) 45%,
+      transparent 74%
+    );
+    filter: blur(14px);
+    transform: translateX(-52%);
+    opacity: 0.9;
+    border-radius: 48%;
+    transition:
+      width 0.35s ease,
+      height 0.35s ease,
+      opacity 0.35s ease,
+      filter 0.35s ease,
+      transform 0.35s ease;
+  }
+
+  .rack-wall-shadow-active {
+    width: 160px;
+    height: 94%;
+    opacity: 1;
+    filter: blur(12px);
+    transform: translateX(-50%);
+  }
+
+  .rack-line {
+    height: 4px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      #2a2a2a 2%,
+      #0e0e0e 16%,
+      #3f3f3f 50%,
+      #0e0e0e 84%,
+      #2a2a2a 98%,
+      transparent 100%
+    );
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.18),
+      0 6px 14px rgba(0, 0, 0, 0.3),
+      0 14px 28px rgba(0, 0, 0, 0.12);
+    border-radius: 999px;
+  }
+
+  .shelf-board {
+    background: linear-gradient(180deg, #b8956a 0%, var(--shelf) 55%, #6a5032 100%);
+    box-shadow:
+      0 12px 28px rgba(8, 59, 63, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  }
+
+  /* Shoe wall — room photo only (no painted L/R side washes) */
+  .shoe-bamboo-wall {
+    box-shadow:
+      0 28px 60px rgba(8, 59, 63, 0.18),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+    background:
+      radial-gradient(92% 38% at 50% -6%, rgba(255, 255, 255, 0.22), transparent 52%),
+      #e8e2d8;
+  }
+
+  .shoe-float-shelf {
+    border-radius: 1px 1px 0 0;
+    background: linear-gradient(
+      180deg,
+      #f7f1e8 0%,
+      #e8dccb 42%,
+      #d4c4ae 78%,
+      #c4b49a 100%
+    );
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.65) inset,
+      0 8px 16px rgba(8, 59, 63, 0.16);
+  }
+
+  .shoe-float-shelf-edge {
+    border-radius: 0 0 1px 1px;
+    background: linear-gradient(180deg, #b8a890 0%, #8a7a66 100%);
+    box-shadow: 0 2px 0 rgba(8, 59, 63, 0.12);
+  }
+
+  .shoe-float-shelf-shadow {
+    border-radius: 50%;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(8, 59, 63, 0.22) 0%,
+      rgba(8, 59, 63, 0) 72%
+    );
+    filter: blur(2px);
+  }
+
+  .pill-nav {
+    background: linear-gradient(
+      135deg,
+      rgba(11, 79, 84, 0.92) 0%,
+      rgba(8, 59, 63, 0.94) 55%,
+      rgba(232, 93, 76, 0.88) 160%
+    );
+    backdrop-filter: blur(16px);
+    box-shadow:
+      0 14px 36px rgba(8, 59, 63, 0.22),
+      0 0 0 1px rgba(250, 246, 240, 0.12) inset;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, #e7ddd0 25%, #f4ebe1 50%, #e7ddd0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  .hang-swing {
+    transform-origin: top center;
+    animation: hangIdle 4.8s ease-in-out infinite;
+  }
+}
+
+@keyframes hangIdle {
+  0%,
+  100% {
+    transform: rotate(-0.7deg);
+  }
+  50% {
+    transform: rotate(0.7deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Admin CRM shell — soft light UI with peach / green / orange brand accents */
+.admin-shell {
+  --peach: #e8934c;
+  --peach-soft: rgba(232, 147, 76, 0.16);
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(900px 420px at 12% -10%, rgba(232, 147, 76, 0.14), transparent 55%),
+    radial-gradient(780px 380px at 92% 0%, rgba(11, 79, 84, 0.1), transparent 50%),
+    linear-gradient(180deg, #faf6f0 0%, #f3ebe0 48%, #ebe2d4 100%);
+}

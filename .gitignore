@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.env
+.env.*
+!.env.example
+dist/
+build/
+tools/
+reference-frames/
+_preview/
+.mongo-data/
+.mongo-log/
+*.log
+.DS_Store
+coverage/
