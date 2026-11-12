@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { fetchProduct, getErrorMessage } from "@/lib/api";
@@ -10,15 +10,12 @@ import type { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
 import { useCartUI } from "@/context/CartUIContext";
 
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const { addItem } = useCart();
   const { openCart } = useCartUI();
-  const { user } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [activeImage, setActiveImage] = useState(0);

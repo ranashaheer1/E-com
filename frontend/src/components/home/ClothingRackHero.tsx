@@ -85,7 +85,6 @@ const FALLBACK_IMAGES = [
   "/products/hanging/jackets/jacket3-front-ghost.png",
 ];
 
-const CARD_COUNT = 8;
 const DRAG_PX_PER_STEP = 220;
 /** Crest scale stays ≤1 so garments grow down from the rail, not over it */
 const SCALE_BASE = 0.78;
@@ -593,7 +592,6 @@ export function ClothingRackHero({ products }: ClothingRackHeroProps) {
     const stage = stageRef.current;
     if (!viewport || !stage || slides.length < 3) return;
 
-    const n = slides.length;
     stepRef.current = 1;
 
     const measure = () => {

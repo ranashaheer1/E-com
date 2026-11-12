@@ -446,7 +446,6 @@ export function StudioRailSection({
       // Map slot offset → arc t (0..1). Crest at t=0.5
       const spread = (VISIBLE_SLOTS + 2.2) / Math.max(0.5, stack.spacing);
       const t = 0.5 + pos / spread;
-      const onArc = t >= -0.02 && t <= 1.02;
       const tc = gsap.utils.clamp(0, 1, t);
       const absPos = Math.abs(pos);
       // Phone pad / iPad locked / desktop arc (clamped for tall fullscreen)

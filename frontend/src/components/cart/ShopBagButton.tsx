@@ -28,7 +28,7 @@ export function ShopBagButton({ className, style }: ShopBagButtonProps) {
 
   return (
     <button
-      ref={bagRef}
+      ref={bagRef as React.RefObject<HTMLButtonElement>}
       type="button"
       onClick={openCart}
       aria-label={`Shopping bag${itemCount ? `, ${itemCount} items` : ""}`}
