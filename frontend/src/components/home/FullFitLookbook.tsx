@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -15,7 +15,10 @@ import { useCart } from "@/context/CartContext";
 import { useCartUI } from "@/context/CartUIContext";
 import {
   FULL_FIT_SECTION_DEFAULT,
+  FULLFIT_VISIBLE_SLOTS,
+  dummiesForBreakpoint,
   slotBlurPx,
+  type FullFitBreakpoint,
 } from "@/lib/fullFitLayout";
 
 type ResolvedLook = {
@@ -25,8 +28,6 @@ type ResolvedLook = {
   pants: Product;
   shoes: Product;
 };
-
-const VISIBLE_SLOTS = 4;
 
 function resolveLooks(products: Product[]): ResolvedLook[] {
   const out: ResolvedLook[] = [];
@@ -47,6 +48,31 @@ function resolveLooks(products: Product[]): ResolvedLook[] {
 
 function shortName(name: string) {
   return name.replace(/^UNKNOWN\s+/i, "").trim();
+}
+
+function useFullFitBreakpoint(): FullFitBreakpoint {
+  const [bp, setBp] = useState<FullFitBreakpoint>("desktop");
+
+  useEffect(() => {
+    const mqPhone = window.matchMedia("(max-width: 767px)");
+    const mqTablet = window.matchMedia(
+      "(min-width: 768px) and (max-width: 1023px)"
+    );
+    const sync = () => {
+      if (mqPhone.matches) setBp("phone");
+      else if (mqTablet.matches) setBp("tablet");
+      else setBp("desktop");
+    };
+    sync();
+    mqPhone.addEventListener("change", sync);
+    mqTablet.addEventListener("change", sync);
+    return () => {
+      mqPhone.removeEventListener("change", sync);
+      mqTablet.removeEventListener("change", sync);
+    };
+  }, []);
+
+  return bp;
 }
 
 function LookDummy({
@@ -73,7 +99,7 @@ function LookDummy({
             fill
             unoptimized
             className="object-contain object-bottom drop-shadow-[0_18px_28px_rgba(20,24,24,0.28)]"
-            sizes="240px"
+            sizes="(max-width: 767px) 55vw, (max-width: 1023px) 40vw, 240px"
             draggable={false}
             priority={front}
           />
@@ -85,7 +111,7 @@ function LookDummy({
             fill
             unoptimized
             className="object-contain object-top drop-shadow-[0_16px_24px_rgba(20,24,24,0.22)]"
-            sizes="200px"
+            sizes="(max-width: 767px) 50vw, (max-width: 1023px) 34vw, 200px"
             draggable={false}
           />
         </div>
@@ -96,7 +122,7 @@ function LookDummy({
             fill
             unoptimized
             className="object-contain object-center drop-shadow-[0_10px_16px_rgba(20,24,24,0.25)]"
-            sizes="160px"
+            sizes="(max-width: 767px) 40vw, (max-width: 1023px) 28vw, 160px"
             draggable={false}
           />
         </div>
@@ -105,13 +131,10 @@ function LookDummy({
   );
 }
 
-/** Same warm ivory as the rest of the storefront (between page wash & green footer) */
 const FULLFIT_BEIGE = "#f3ebe0";
 
-/** Shirts room wall — zoomed out + lower crop so plaster shows, not window sky */
 const FULLFIT_WALL = {
   src: "/rooms/beige-room-wall.jpg",
-  /** Zoomed-in framing (same as earlier Full Fit wall) */
   bgWidthPct: 165,
   wallPosY: 48,
   wallZoom: 1.05,
@@ -120,9 +143,11 @@ const FULLFIT_WALL = {
 function ParadeArrow({
   dir,
   onClick,
+  compact,
 }: {
   dir: "left" | "right";
   onClick: () => void;
+  compact?: boolean;
 }) {
   const Icon = dir === "left" ? ChevronLeft : ChevronRight;
   return (
@@ -131,23 +156,23 @@ function ParadeArrow({
       aria-label={dir === "left" ? "Previous look" : "Next look"}
       onClick={onClick}
       className={cn(
-        "group absolute top-1/2 z-50 flex h-12 w-12 -translate-y-1/2 items-center justify-center",
+        "group absolute top-1/2 z-50 flex -translate-y-1/2 items-center justify-center",
         "rounded-full border border-teal-deep/15 bg-white/80 text-teal-deep",
         "shadow-[0_8px_28px_rgba(20,28,28,0.12)] backdrop-blur-md",
-        "transition duration-300 hover:border-coral/40 hover:bg-white hover:text-coral hover:shadow-[0_12px_32px_rgba(232,93,76,0.22)]",
+        "transition duration-300 hover:border-coral/40 hover:bg-white hover:text-coral",
         "active:scale-95",
-        dir === "left" ? "left-2" : "right-2"
+        compact ? "h-10 w-10" : "h-12 w-12",
+        dir === "left" ? "left-1.5 sm:left-2" : "right-1.5 sm:right-2"
       )}
     >
       <span
-        className={cn(
-          "absolute inset-[3px] rounded-full border border-teal-deep/10 transition group-hover:border-coral/25"
-        )}
+        className="absolute inset-[3px] rounded-full border border-teal-deep/10 transition group-hover:border-coral/25"
         aria-hidden
       />
       <Icon
         className={cn(
-          "relative h-5 w-5 transition duration-300",
+          "relative transition duration-300",
+          compact ? "h-4 w-4" : "h-5 w-5",
           dir === "left"
             ? "group-hover:-translate-x-0.5"
             : "group-hover:translate-x-0.5"
@@ -158,7 +183,6 @@ function ParadeArrow({
   );
 }
 
-/** Hairline between jacket / pants / shoes — same panel color, clear split */
 function ShopDivider() {
   return (
     <div
@@ -181,16 +205,66 @@ function ShopDivider() {
   );
 }
 
-/** One of three equal shop cells — image on top, name + price left below */
 function ShopCell({
   product,
   nested,
+  compact,
 }: {
   product: Product;
   nested?: Product | null;
+  /** Horizontal card layout for phone */
+  compact?: boolean;
 }) {
   const [showTee, setShowTee] = useState(false);
   const visible = showTee && nested ? nested : product;
+
+  if (compact) {
+    return (
+      <div className="relative flex min-w-0 flex-1 flex-col items-stretch">
+        <div className="relative mx-auto aspect-[3/4] w-full max-w-[120px] overflow-hidden sm:max-w-[140px]">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={visible._id}
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22 }}
+            >
+              <Image
+                src={visible.images[0]}
+                alt={shortName(visible.name)}
+                fill
+                unoptimized
+                className="object-contain object-center p-1"
+                sizes="140px"
+              />
+            </motion.div>
+          </AnimatePresence>
+          {nested ? (
+            <button
+              type="button"
+              aria-label={showTee ? "Show jacket" : "Reveal tee under jacket"}
+              onClick={() => setShowTee((v) => !v)}
+              className="absolute left-0.5 top-1/2 z-10 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full border border-teal-deep/20 bg-white/95 text-teal-deep shadow-sm"
+            >
+              {showTee ? (
+                <ChevronRight className="h-3 w-3" strokeWidth={2} />
+              ) : (
+                <ChevronLeft className="h-3 w-3" strokeWidth={2} />
+              )}
+            </button>
+          ) : null}
+        </div>
+        <div className="mt-1.5 px-0.5 text-center">
+          <p className="truncate text-[10px] font-medium uppercase tracking-[0.1em] text-teal-deep">
+            {shortName(visible.name)}
+          </p>
+          <p className="mt-0.5 text-xs text-muted">{formatPrice(visible.price)}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
@@ -248,6 +322,12 @@ interface FullFitLookbookProps {
 
 export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
   const frames = FULL_FIT_SECTION_DEFAULT;
+  const bp = useFullFitBreakpoint();
+  const visibleSlots = FULLFIT_VISIBLE_SLOTS[bp];
+  const dummies = dummiesForBreakpoint(bp);
+  const isDesktop = bp === "desktop";
+  const isPhone = bp === "phone";
+
   const looks = useMemo(() => resolveLooks(products), [products]);
   const [active, setActive] = useState(0);
   const { addItem } = useCart();
@@ -259,11 +339,11 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
 
   const parade = useMemo(() => {
     if (!n) return [];
-    return Array.from({ length: Math.min(VISIBLE_SLOTS, n) }, (_, slot) => {
+    return Array.from({ length: Math.min(visibleSlots, n) }, (_, slot) => {
       const index = (safeIndex + slot) % n;
       return { look: looks[index], slot, index };
     });
-  }, [looks, n, safeIndex]);
+  }, [looks, n, safeIndex, visibleSlots]);
 
   const onAdd = async (product: Product) => {
     const size =
@@ -305,122 +385,194 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
     );
   }
 
-  const { stage, shop, dummies } = frames;
+  const { stage, shop } = frames;
 
+  const stageInner = (
+    <>
+      <div
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+        style={{ background: FULLFIT_BEIGE }}
+        aria-hidden
+      >
+        <Image
+          src={FULLFIT_WALL.src}
+          alt=""
+          width={2307}
+          height={1540}
+          unoptimized
+          priority
+          sizes="(max-width: 1023px) 100vw, 70vw"
+          className="absolute left-1/2 h-auto max-w-none"
+          style={{
+            width: `${isPhone ? 140 : FULLFIT_WALL.bgWidthPct}%`,
+            top: `${FULLFIT_WALL.wallPosY}%`,
+            transform: `translate(-50%, -50%) scale(${
+              isPhone ? 0.95 : FULLFIT_WALL.wallZoom
+            })`,
+          }}
+        />
+        <div className="shirt-studio-atmosphere absolute inset-0" />
+      </div>
+
+      {parade.map(({ look, slot, index }) => {
+        const box = dummies[slot];
+        if (!box) return null;
+        const front = slot === 0;
+        const blur = slotBlurPx(slot, visibleSlots);
+        return (
+          <div
+            key={look.recipe.id}
+            className="absolute will-change-[filter,left,top,width,height]"
+            style={{
+              left: `${box.x}%`,
+              top: `${box.y}%`,
+              width: `${box.w}%`,
+              height: `${box.h}%`,
+              zIndex: visibleSlots - slot,
+              filter: `blur(${blur}px)`,
+              transition:
+                "filter 0.45s ease, left 0.45s ease, top 0.45s ease, width 0.45s ease, height 0.45s ease",
+            }}
+          >
+            <div
+              className={cn(
+                "fullfit-dummy-shadow",
+                front && "fullfit-dummy-shadow-main"
+              )}
+              aria-hidden
+            />
+            <div className="relative z-[1] h-full w-full">
+              <LookDummy
+                look={look}
+                front={front}
+                onClick={() => setActive(index)}
+              />
+            </div>
+          </div>
+        );
+      })}
+
+      <ParadeArrow dir="left" onClick={() => go(-1)} compact={!isDesktop} />
+      <ParadeArrow dir="right" onClick={() => go(1)} compact={!isDesktop} />
+
+      <p className="absolute bottom-2 left-1/2 z-50 -translate-x-1/2 rounded-full bg-white/85 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-teal-deep/65 shadow-sm backdrop-blur-sm sm:bottom-3">
+        {safeIndex + 1} / {n}
+      </p>
+    </>
+  );
+
+  const shopBody = isPhone ? (
+    <>
+      <div className="flex gap-2 sm:gap-3">
+        <ShopCell product={current.outer} nested={current.tee} compact />
+        <ShopCell product={current.pants} compact />
+        <ShopCell product={current.shoes} compact />
+      </div>
+      <button
+        type="button"
+        onClick={() => {
+          void onAdd(current.outer);
+          void onAdd(current.pants);
+          void onAdd(current.shoes);
+          if (current.tee) void onAdd(current.tee);
+        }}
+        className="mt-3 inline-flex h-11 w-full shrink-0 items-center justify-center rounded-full bg-teal-deep text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-teal"
+      >
+        Add full look
+      </button>
+    </>
+  ) : (
+    <>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <ShopCell product={current.outer} nested={current.tee} />
+        <ShopDivider />
+        <ShopCell product={current.pants} />
+        <ShopDivider />
+        <ShopCell product={current.shoes} />
+      </div>
+      <button
+        type="button"
+        onClick={() => {
+          void onAdd(current.outer);
+          void onAdd(current.pants);
+          void onAdd(current.shoes);
+          if (current.tee) void onAdd(current.tee);
+        }}
+        className="mt-2 inline-flex h-10 w-full shrink-0 items-center justify-center rounded-full bg-teal-deep text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-teal"
+      >
+        Add full look
+      </button>
+    </>
+  );
+
+  /* —— Desktop: locked absolute frames (laptop pad) —— */
+  if (isDesktop) {
+    return (
+      <section
+        className="relative min-h-[100dvh] overflow-hidden pb-28"
+        style={{ background: FULLFIT_BEIGE }}
+      >
+        <div
+          className="absolute overflow-hidden"
+          style={{
+            left: `${stage.x}vw`,
+            top: stage.y,
+            width: `${stage.w}vw`,
+            height: stage.h,
+            background: FULLFIT_BEIGE,
+          }}
+        >
+          {stageInner}
+        </div>
+
+        <aside
+          className="absolute flex flex-col overflow-hidden rounded-[20px] p-3 shadow-[0_18px_40px_rgba(30,24,18,0.08)] sm:p-4"
+          style={{
+            left: `${shop.x}vw`,
+            top: shop.y,
+            width: `${shop.w}vw`,
+            height: shop.h,
+            background: FULLFIT_BEIGE,
+          }}
+        >
+          {shopBody}
+        </aside>
+      </section>
+    );
+  }
+
+  /* —— Phone / iPad: stacked stage + shop —— */
   return (
     <section
-      className="relative min-h-[100dvh] overflow-hidden pb-28"
+      className="relative flex flex-col pb-28"
       style={{ background: FULLFIT_BEIGE }}
     >
       <div
-        className="absolute overflow-hidden"
-        style={{
-          left: `${stage.x}vw`,
-          top: stage.y,
-          width: `${stage.w}vw`,
-          height: stage.h,
-          background: FULLFIT_BEIGE,
-        }}
+        className={cn(
+          "relative w-full overflow-hidden",
+          isPhone ? "h-[min(68vh,560px)]" : "h-[min(72vh,680px)]"
+        )}
+        style={{ background: FULLFIT_BEIGE }}
       >
-        {/* Shirts beige room wall — zoomed out behind dummies */}
-        <div
-          className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
-          style={{ background: FULLFIT_BEIGE }}
-          aria-hidden
-        >
-          <Image
-            src={FULLFIT_WALL.src}
-            alt=""
-            width={2307}
-            height={1540}
-            unoptimized
-            priority
-            sizes="70vw"
-            className="absolute left-1/2 h-auto max-w-none"
-            style={{
-              width: `${FULLFIT_WALL.bgWidthPct}%`,
-              top: `${FULLFIT_WALL.wallPosY}%`,
-              transform: `translate(-50%, -50%) scale(${FULLFIT_WALL.wallZoom})`,
-            }}
-          />
-          <div className="shirt-studio-atmosphere absolute inset-0" />
-        </div>
-
-        {parade.map(({ look, slot, index }) => {
-          const box = dummies[slot];
-          const front = slot === 0;
-          const blur = slotBlurPx(slot);
-          return (
-            <div
-              key={look.recipe.id}
-              className="absolute will-change-[filter,left,top,width,height]"
-              style={{
-                left: `${box.x}%`,
-                top: `${box.y}%`,
-                width: `${box.w}%`,
-                height: `${box.h}%`,
-                zIndex: VISIBLE_SLOTS - slot,
-                filter: `blur(${blur}px)`,
-                transition:
-                  "filter 0.45s ease, left 0.45s ease, top 0.45s ease, width 0.45s ease, height 0.45s ease",
-              }}
-            >
-              <div
-                className={cn(
-                  "fullfit-dummy-shadow",
-                  front && "fullfit-dummy-shadow-main"
-                )}
-                aria-hidden
-              />
-              <div className="relative z-[1] h-full w-full">
-                <LookDummy
-                  look={look}
-                  front={front}
-                  onClick={() => setActive(index)}
-                />
-              </div>
-            </div>
-          );
-        })}
-
-        <ParadeArrow dir="left" onClick={() => go(-1)} />
-        <ParadeArrow dir="right" onClick={() => go(1)} />
-
-        <p className="absolute bottom-3 left-1/2 z-50 -translate-x-1/2 rounded-full bg-white/85 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-teal-deep/65 shadow-sm backdrop-blur-sm">
-          {safeIndex + 1} / {n}
-        </p>
+        {stageInner}
       </div>
 
       <aside
-        className="absolute flex flex-col overflow-hidden rounded-[20px] p-3 shadow-[0_18px_40px_rgba(30,24,18,0.08)] sm:p-4"
-        style={{
-          left: `${shop.x}vw`,
-          top: shop.y,
-          width: `${shop.w}vw`,
-          height: shop.h,
-          background: FULLFIT_BEIGE,
-        }}
+        className={cn(
+          "relative mx-auto w-full max-w-3xl px-3 pt-3",
+          isPhone ? "pb-2" : "flex min-h-[420px] flex-col px-4 pb-4 pt-4"
+        )}
+        style={{ background: FULLFIT_BEIGE }}
       >
-        <div className="flex min-h-0 flex-1 flex-col">
-          <ShopCell product={current.outer} nested={current.tee} />
-          <ShopDivider />
-          <ShopCell product={current.pants} />
-          <ShopDivider />
-          <ShopCell product={current.shoes} />
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            void onAdd(current.outer);
-            void onAdd(current.pants);
-            void onAdd(current.shoes);
-            if (current.tee) void onAdd(current.tee);
-          }}
-          className="mt-2 inline-flex h-10 w-full shrink-0 items-center justify-center rounded-full bg-teal-deep text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-teal"
+        <div
+          className={cn(
+            "overflow-hidden rounded-[18px] p-3 shadow-[0_12px_32px_rgba(30,24,18,0.08)]",
+            !isPhone && "flex h-full min-h-[400px] flex-col p-4"
+          )}
+          style={{ background: FULLFIT_BEIGE }}
         >
-          Add full look
-        </button>
+          {shopBody}
+        </div>
       </aside>
     </section>
   );
