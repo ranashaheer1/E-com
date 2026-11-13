@@ -105,8 +105,20 @@ function LookDummy({
   );
 }
 
-/** Shared Full Fit surface — stage + shop (light teal mist, not cream) */
-const FULLFIT_BG = "#e8f1f0";
+/** Shop panel — light teal mist (stage uses shirts wall photo) */
+const FULLFIT_SHOP_BG = "#e8f1f0";
+
+/** Same beige room wall as shirts — framed for the taller dummy stage */
+const FULLFIT_WALL = {
+  src: "/rooms/beige-room-wall.jpg",
+  width: 2307,
+  height: 1540,
+  /** % of stage width so plaster fills edge-to-edge */
+  bgWidthPct: 165,
+  wallPosY: 48,
+  wallZoom: 1.05,
+  fill: "#ebe4d8",
+};
 
 function ParadeArrow({
   dir,
@@ -278,7 +290,7 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
   return (
     <section
       className="relative min-h-[100dvh] overflow-hidden pb-28"
-      style={{ background: FULLFIT_BG }}
+      style={{ background: FULLFIT_SHOP_BG }}
     >
       <div
         className="absolute overflow-hidden"
@@ -287,9 +299,32 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
           top: stage.y,
           width: `${stage.w}vw`,
           height: stage.h,
-          background: FULLFIT_BG,
+          background: FULLFIT_WALL.fill,
         }}
       >
+        {/* Shirts-section room wall (adjusted for Full Fit stage) */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+          aria-hidden
+        >
+          <Image
+            src={FULLFIT_WALL.src}
+            alt=""
+            width={FULLFIT_WALL.width}
+            height={FULLFIT_WALL.height}
+            unoptimized
+            priority
+            sizes="65vw"
+            className="absolute left-1/2 h-auto max-w-none"
+            style={{
+              width: `${FULLFIT_WALL.bgWidthPct}%`,
+              top: `${FULLFIT_WALL.wallPosY}%`,
+              transform: `translate(-50%, -50%) scale(${FULLFIT_WALL.wallZoom})`,
+            }}
+          />
+          <div className="shirt-studio-atmosphere absolute inset-0" />
+        </div>
+
         {parade.map(({ look, slot, index }) => {
           const box = dummies[slot];
           const front = slot === 0;
@@ -342,7 +377,7 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
           top: shop.y,
           width: `${shop.w}vw`,
           height: shop.h,
-          background: FULLFIT_BG,
+          background: FULLFIT_SHOP_BG,
         }}
       >
         <div className="flex min-h-0 flex-1 flex-col">
