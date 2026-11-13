@@ -37,6 +37,9 @@ export function Footer() {
             Shop
           </p>
           <div className="mt-4 flex flex-col gap-2 text-sm text-[#e8dfd2]">
+            <Link href="/full-fit" className="transition hover:text-white">
+              Full Fit
+            </Link>
             <Link href="/shirts" className="transition hover:text-white">
               Shirts
             </Link>

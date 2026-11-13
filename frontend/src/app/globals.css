@@ -311,6 +311,37 @@ body {
   }
 }
 
+.fullfit-dummy-shadow {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  bottom: 1.5%;
+  z-index: 0;
+  width: 72%;
+  height: 7%;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(28, 20, 14, 0.38) 0%,
+    rgba(28, 20, 14, 0.16) 42%,
+    transparent 72%
+  );
+  filter: blur(4px);
+}
+
+.fullfit-dummy-shadow-main {
+  width: 78%;
+  height: 8%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(28, 20, 14, 0.45) 0%,
+    rgba(28, 20, 14, 0.2) 40%,
+    transparent 74%
+  );
+  filter: blur(5px);
+}
+
 /* Admin CRM shell — soft light UI with peach / green / orange brand accents */
 .admin-shell {
   --peach: #e8934c;

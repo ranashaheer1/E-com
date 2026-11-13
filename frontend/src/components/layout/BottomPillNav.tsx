@@ -3,12 +3,14 @@
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCategoryNav, type NavCategory } from "@/context/CategoryNavContext";
 import { pathForCategory } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
-const items: Array<{ id: NavCategory | "store"; label: string }> = [
+const items: Array<{ id: NavCategory | "store" | "full-fit"; label: string; href?: string }> = [
   { id: "store", label: "Store" },
+  { id: "full-fit", label: "Full Fit", href: "/full-fit" },
   { id: "shirts", label: "Shirts" },
   { id: "pants", label: "Pants" },
   { id: "hoodies", label: "Hoodies" },
@@ -18,6 +20,7 @@ const items: Array<{ id: NavCategory | "store"; label: string }> = [
 
 export function BottomPillNav() {
   const { activeCategory } = useCategoryNav();
+  const pathname = usePathname();
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-5 z-[60] flex justify-center px-3 sm:bottom-7">
@@ -28,11 +31,14 @@ export function BottomPillNav() {
       >
         {items.map((item) => {
           const href =
-            item.id === "store" ? "/" : pathForCategory(item.id);
+            item.href ||
+            (item.id === "store" ? "/" : pathForCategory(item.id as NavCategory));
           const active =
-            item.id === "store"
-              ? activeCategory === "all"
-              : activeCategory === item.id;
+            item.id === "full-fit"
+              ? pathname === "/full-fit"
+              : item.id === "store"
+                ? activeCategory === "all" && pathname !== "/full-fit"
+                : activeCategory === item.id;
 
           return (
             <Link
