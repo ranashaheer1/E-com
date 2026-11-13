@@ -105,16 +105,16 @@ function LookDummy({
   );
 }
 
-/** Site beige above the green footer (ivory-deep) — no sky teal */
-const FULLFIT_BEIGE = "#e8dccb";
+/** Same warm ivory as the rest of the storefront (between page wash & green footer) */
+const FULLFIT_BEIGE = "#f3ebe0";
 
-/** Same shirts room wall — zoomed out so plaster reads behind the dummies */
+/** Shirts room wall — zoomed out + lower crop so plaster shows, not window sky */
 const FULLFIT_WALL = {
   src: "/rooms/beige-room-wall.jpg",
-  /** Wrapper size vs stage; scale < 1 = zoom out */
-  framePct: 128,
-  wallZoom: 0.78,
-  objectPos: "center 42%",
+  /** % of stage; lower zoom = more wall visible */
+  bgWidthPct: 118,
+  wallPosY: 52,
+  wallZoom: 0.62,
 };
 
 function ParadeArrow({
@@ -302,27 +302,24 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
         {/* Shirts beige room wall — zoomed out behind dummies */}
         <div
           className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+          style={{ background: FULLFIT_BEIGE }}
           aria-hidden
         >
-          <div
-            className="absolute left-1/2 top-1/2"
+          <Image
+            src={FULLFIT_WALL.src}
+            alt=""
+            width={2307}
+            height={1540}
+            unoptimized
+            priority
+            sizes="70vw"
+            className="absolute left-1/2 h-auto max-w-none"
             style={{
-              width: `${FULLFIT_WALL.framePct}%`,
-              height: `${FULLFIT_WALL.framePct}%`,
+              width: `${FULLFIT_WALL.bgWidthPct}%`,
+              top: `${FULLFIT_WALL.wallPosY}%`,
               transform: `translate(-50%, -50%) scale(${FULLFIT_WALL.wallZoom})`,
             }}
-          >
-            <Image
-              src={FULLFIT_WALL.src}
-              alt=""
-              fill
-              unoptimized
-              priority
-              sizes="70vw"
-              className="object-cover"
-              style={{ objectPosition: FULLFIT_WALL.objectPos }}
-            />
-          </div>
+          />
           <div className="shirt-studio-atmosphere absolute inset-0" />
         </div>
 
