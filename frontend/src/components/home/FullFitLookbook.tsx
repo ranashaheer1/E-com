@@ -105,19 +105,16 @@ function LookDummy({
   );
 }
 
-/** Shop panel — light teal mist (stage uses shirts wall photo) */
-const FULLFIT_SHOP_BG = "#e8f1f0";
+/** Site beige above the green footer (ivory-deep) — no sky teal */
+const FULLFIT_BEIGE = "#e8dccb";
 
-/** Same beige room wall as shirts — framed for the taller dummy stage */
+/** Same shirts room wall — zoomed out so plaster reads behind the dummies */
 const FULLFIT_WALL = {
   src: "/rooms/beige-room-wall.jpg",
-  width: 2307,
-  height: 1540,
-  /** % of stage width so plaster fills edge-to-edge */
-  bgWidthPct: 165,
-  wallPosY: 48,
-  wallZoom: 1.05,
-  fill: "#ebe4d8",
+  /** Wrapper size vs stage; scale < 1 = zoom out */
+  framePct: 128,
+  wallZoom: 0.78,
+  objectPos: "center 42%",
 };
 
 function ParadeArrow({
@@ -290,7 +287,7 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
   return (
     <section
       className="relative min-h-[100dvh] overflow-hidden pb-28"
-      style={{ background: FULLFIT_SHOP_BG }}
+      style={{ background: FULLFIT_BEIGE }}
     >
       <div
         className="absolute overflow-hidden"
@@ -299,29 +296,33 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
           top: stage.y,
           width: `${stage.w}vw`,
           height: stage.h,
-          background: FULLFIT_WALL.fill,
+          background: FULLFIT_BEIGE,
         }}
       >
-        {/* Shirts-section room wall (adjusted for Full Fit stage) */}
+        {/* Shirts beige room wall — zoomed out behind dummies */}
         <div
           className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
           aria-hidden
         >
-          <Image
-            src={FULLFIT_WALL.src}
-            alt=""
-            width={FULLFIT_WALL.width}
-            height={FULLFIT_WALL.height}
-            unoptimized
-            priority
-            sizes="65vw"
-            className="absolute left-1/2 h-auto max-w-none"
+          <div
+            className="absolute left-1/2 top-1/2"
             style={{
-              width: `${FULLFIT_WALL.bgWidthPct}%`,
-              top: `${FULLFIT_WALL.wallPosY}%`,
+              width: `${FULLFIT_WALL.framePct}%`,
+              height: `${FULLFIT_WALL.framePct}%`,
               transform: `translate(-50%, -50%) scale(${FULLFIT_WALL.wallZoom})`,
             }}
-          />
+          >
+            <Image
+              src={FULLFIT_WALL.src}
+              alt=""
+              fill
+              unoptimized
+              priority
+              sizes="70vw"
+              className="object-cover"
+              style={{ objectPosition: FULLFIT_WALL.objectPos }}
+            />
+          </div>
           <div className="shirt-studio-atmosphere absolute inset-0" />
         </div>
 
@@ -377,7 +378,7 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
           top: shop.y,
           width: `${shop.w}vw`,
           height: shop.h,
-          background: FULLFIT_SHOP_BG,
+          background: FULLFIT_BEIGE,
         }}
       >
         <div className="flex min-h-0 flex-1 flex-col">
