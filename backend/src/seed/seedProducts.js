@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const connectDB = require('../config/db');
+const { connectDB } = require('../config/db');
 const User = require('../models/User');
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
@@ -589,28 +589,25 @@ const seed = async () => {
   try {
     await connectDB();
 
-    await Promise.all([
-      Order.deleteMany({}),
-      Cart.deleteMany({}),
-      Product.deleteMany({}),
-      User.deleteMany({}),
-    ]);
+    // FK order: items → carts/orders → products/users
+    await Order.deleteMany();
+    await Cart.deleteMany();
+    await Product.deleteMany();
+    await User.deleteMany();
 
     const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!';
-    const [adminUser, demoUser] = await User.create([
-      {
-        name: 'UNKNOWN Admin',
-        email: 'admin@unknown.com',
-        password: adminPassword,
-        role: 'admin',
-      },
-      {
-        name: 'Demo Shopper',
-        email: 'demo@unknown.com',
-        password: 'Demo123!',
-        role: 'user',
-      },
-    ]);
+    const adminUser = await User.create({
+      name: 'UNKNOWN Admin',
+      email: 'admin@unknown.com',
+      password: adminPassword,
+      role: 'admin',
+    });
+    const demoUser = await User.create({
+      name: 'Demo Shopper',
+      email: 'demo@unknown.com',
+      password: 'Demo123!',
+      role: 'user',
+    });
 
     const inserted = await Product.insertMany(products);
     const pick = (i) => inserted[i % inserted.length];

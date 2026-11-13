@@ -1,9 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-/**
- * Protect routes — requires a valid Bearer JWT.
- */
 const protect = async (req, res, next) => {
   try {
     const header = req.headers.authorization || '';
@@ -14,7 +11,7 @@ const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
+    const user = await User.findById(decoded.id);
 
     if (!user) {
       return res.status(401).json({ success: false, message: 'User no longer exists' });
@@ -27,9 +24,6 @@ const protect = async (req, res, next) => {
   }
 };
 
-/**
- * Attach user when a valid token is present; otherwise continue as guest.
- */
 const optionalProtect = async (req, res, next) => {
   try {
     const header = req.headers.authorization || '';
@@ -41,7 +35,7 @@ const optionalProtect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
+    const user = await User.findById(decoded.id);
     req.user = user || null;
     return next();
   } catch (error) {
@@ -50,9 +44,6 @@ const optionalProtect = async (req, res, next) => {
   }
 };
 
-/**
- * Restrict access to admin users.
- */
 const admin = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
     return next();

@@ -11,22 +11,16 @@ const getProducts = async (req, res, next) => {
     } = req.query;
 
     const filter = {};
-
     if (category) filter.category = String(category).toLowerCase();
     if (featured === 'true') filter.featured = true;
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
-    }
+    if (search) filter.search = String(search);
 
     const pageNum = Math.max(1, Number(page) || 1);
     const limitNum = Math.min(60, Math.max(1, Number(limit) || 24));
     const skip = (pageNum - 1) * limitNum;
 
     const [products, total] = await Promise.all([
-      Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+      Product.find(filter, { skip, limit: limitNum }),
       Product.countDocuments(filter),
     ]);
 
@@ -48,10 +42,7 @@ const getProducts = async (req, res, next) => {
 const getProductById = async (req, res, next) => {
   try {
     const key = String(req.params.id || '').trim();
-    let product = null;
-    if (/^[a-f\d]{24}$/i.test(key)) {
-      product = await Product.findById(key);
-    }
+    let product = await Product.findById(key);
     if (!product) {
       product = await Product.findOne({ slug: key.toLowerCase() });
     }

@@ -13,15 +13,10 @@ const createProduct = async (req, res, next) => {
 
 const updateProduct = async (req, res, next) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
-
     res.json({ success: true, data: product });
   } catch (error) {
     next(error);
@@ -48,21 +43,10 @@ const getAllOrders = async (req, res, next) => {
       filter.orderStatus = status;
     }
     if (search) {
-      const q = String(search).trim();
-      filter.$or = [
-        { 'shippingAddress.fullName': new RegExp(q, 'i') },
-        { 'shippingAddress.email': new RegExp(q, 'i') },
-        { 'items.name': new RegExp(q, 'i') },
-        { 'items.category': new RegExp(q, 'i') },
-      ];
-      if (/^[a-f\d]{24}$/i.test(q)) {
-        filter.$or.push({ _id: q });
-      }
+      filter.search = String(search).trim();
     }
 
-    const orders = await Order.find(filter)
-      .populate('user', 'name email')
-      .sort({ createdAt: -1 });
+    const orders = await Order.find(filter, { populateUser: true });
     res.json({ success: true, data: orders });
   } catch (error) {
     next(error);
@@ -80,9 +64,9 @@ const updateOrderStatus = async (req, res, next) => {
 
     if (orderStatus) order.orderStatus = orderStatus;
     if (paymentStatus) order.paymentStatus = paymentStatus;
-    await order.save();
+    const saved = await Order.save(order);
 
-    res.json({ success: true, data: order });
+    res.json({ success: true, data: saved });
   } catch (error) {
     next(error);
   }
@@ -104,7 +88,9 @@ const pctChange = (current, previous) => {
 };
 
 const customerKey = (o) =>
-  o.user ? String(o.user) : o.shippingAddress?.email || o.shippingAddress?.phone || o._id;
+  o.user
+    ? String(typeof o.user === 'object' ? o.user._id : o.user)
+    : o.shippingAddress?.email || o.shippingAddress?.phone || o._id;
 
 const getDashboardStats = async (req, res, next) => {
   try {
@@ -131,10 +117,6 @@ const getDashboardStats = async (req, res, next) => {
       rangeEnd = now;
       compareStart = new Date(now.getFullYear() - 1, 0, 1);
       compareEnd = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
-    } else {
-      // this_month default — compare vs last month
-      compareStart = startLastMonth;
-      compareEnd = endLastMonth;
     }
 
     const [
@@ -146,9 +128,7 @@ const getDashboardStats = async (req, res, next) => {
       chartOrders,
       featuredCount,
     ] = await Promise.all([
-      Order.find().select(
-        'totalAmount orderStatus paymentStatus createdAt shippingAddress items isGuest user'
-      ),
+      Order.find({}),
       User.countDocuments({ role: 'user' }),
       Product.countDocuments(),
       Order.find({ createdAt: { $gte: rangeStart, $lte: rangeEnd } }),
@@ -158,7 +138,7 @@ const getDashboardStats = async (req, res, next) => {
           $gte: new Date(chartYear, 0, 1),
           $lte: new Date(chartYear, 11, 31, 23, 59, 59, 999),
         },
-      }).select('totalAmount orderStatus paymentStatus createdAt'),
+      }),
       Product.countDocuments({ featured: true }),
     ]);
 
@@ -225,9 +205,8 @@ const getDashboardStats = async (req, res, next) => {
         period,
         kpis: {
           totalOrders: periodOrders.length,
-          totalCustomers: period === 'this_year'
-            ? registeredUsers + guestCount
-            : periodCustomers,
+          totalCustomers:
+            period === 'this_year' ? registeredUsers + guestCount : periodCustomers,
           totalRevenue: periodRevenue,
           returningBuyers: completedIn(periodOrders),
           pendingOrders: periodOrders.filter((o) => o.orderStatus === 'pending').length,
@@ -257,13 +236,11 @@ const getDashboardStats = async (req, res, next) => {
 const getNotifications = async (req, res, next) => {
   try {
     const since = req.query.since ? new Date(String(req.query.since)) : null;
-    const filter = since && !Number.isNaN(since.getTime())
-      ? { createdAt: { $gte: since } }
-      : {};
-    const orders = await Order.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(25)
-      .select('shippingAddress totalAmount orderStatus createdAt isGuest items');
+    const filter =
+      since && !Number.isNaN(since.getTime())
+        ? { createdAt: { $gte: since } }
+        : {};
+    const orders = await Order.find(filter, { limit: 25 });
 
     const notifications = orders.map((order) => ({
       _id: order._id,
@@ -291,10 +268,8 @@ const getNotifications = async (req, res, next) => {
 const getCustomers = async (req, res, next) => {
   try {
     const [users, orders] = await Promise.all([
-      User.find({ role: 'user' }).select('name email createdAt').sort({ createdAt: -1 }),
-      Order.find()
-        .select('shippingAddress totalAmount createdAt isGuest user orderStatus')
-        .sort({ createdAt: -1 }),
+      User.find({ role: 'user' }),
+      Order.find({}),
     ]);
 
     const byKey = new Map();
@@ -312,8 +287,10 @@ const getCustomers = async (req, res, next) => {
     });
 
     orders.forEach((o) => {
-      const key = o.user
-        ? String(o.user)
+      const userId =
+        typeof o.user === 'object' && o.user ? o.user._id : o.user;
+      const key = userId
+        ? String(userId)
         : `guest:${o.shippingAddress?.email || o.shippingAddress?.phone || o._id}`;
       if (!byKey.has(key)) {
         byKey.set(key, {
@@ -336,7 +313,8 @@ const getCustomers = async (req, res, next) => {
     });
 
     const data = [...byKey.values()].sort(
-      (a, b) => new Date(b.lastOrderAt || b.createdAt) - new Date(a.lastOrderAt || a.createdAt)
+      (a, b) =>
+        new Date(b.lastOrderAt || b.createdAt) - new Date(a.lastOrderAt || a.createdAt)
     );
 
     res.json({ success: true, data });
@@ -347,7 +325,7 @@ const getCustomers = async (req, res, next) => {
 
 const updateAdminProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id).select('+password');
+    const user = await User.findById(req.user._id, { withPassword: true });
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -360,23 +338,23 @@ const updateAdminProfile = async (req, res, next) => {
     if (bio !== undefined) user.bio = bio;
 
     if (password) {
-      if (!currentPassword || !(await user.matchPassword(currentPassword))) {
+      if (!currentPassword || !(await User.matchPassword(user, currentPassword))) {
         return res.status(400).json({ success: false, message: 'Current password incorrect' });
       }
       user.password = password;
     }
 
-    await user.save();
+    const saved = await User.save(user);
     res.json({
       success: true,
       data: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phone: user.phone || '',
-        avatar: user.avatar || '',
-        bio: user.bio || '',
+        _id: saved._id,
+        name: saved.name,
+        email: saved.email,
+        role: saved.role,
+        phone: saved.phone || '',
+        avatar: saved.avatar || '',
+        bio: saved.bio || '',
       },
     });
   } catch (error) {

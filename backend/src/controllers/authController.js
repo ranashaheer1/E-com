@@ -39,8 +39,11 @@ const login = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
-    if (!user || !(await user.matchPassword(password))) {
+    const user = await User.findOne(
+      { email: email.toLowerCase() },
+      { withPassword: true }
+    );
+    if (!user || !(await User.matchPassword(user, password))) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
@@ -59,10 +62,6 @@ const login = async (req, res, next) => {
   }
 };
 
-/**
- * Simple admin gate: ADMIN_PASSWORD env, or admin user password.
- * Body: { password, email? }
- */
 const adminLogin = async (req, res, next) => {
   try {
     const { password, email } = req.body;
@@ -91,8 +90,11 @@ const adminLogin = async (req, res, next) => {
       }
     } else {
       const adminEmail = (email || 'admin@unknown.com').toLowerCase();
-      user = await User.findOne({ email: adminEmail, role: 'admin' }).select('+password');
-      if (!user || !(await user.matchPassword(password))) {
+      user = await User.findOne(
+        { email: adminEmail, role: 'admin' },
+        { withPassword: true }
+      );
+      if (!user || !(await User.matchPassword(user, password))) {
         return res.status(401).json({ success: false, message: 'Invalid admin credentials' });
       }
     }

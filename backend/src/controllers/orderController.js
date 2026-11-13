@@ -49,7 +49,7 @@ const buildOrderItemsFromLines = async (lines) => {
   }
 
   for (const product of stockUpdates) {
-    await product.save();
+    await Product.save(product);
   }
 
   return { orderItems, totalAmount };
@@ -80,7 +80,7 @@ const createOrder = async (req, res, next) => {
     if (Array.isArray(bodyItems) && bodyItems.length > 0) {
       ({ orderItems, totalAmount } = await buildOrderItemsFromLines(bodyItems));
     } else if (req.user) {
-      cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
+      cart = await Cart.findOne({ user: req.user._id });
       if (!cart || cart.items.length === 0) {
         return res.status(400).json({ success: false, message: 'Cart is empty' });
       }
@@ -114,8 +114,7 @@ const createOrder = async (req, res, next) => {
     });
 
     if (cart) {
-      cart.items = [];
-      await cart.save();
+      await Cart.save({ ...cart, items: [], user: req.user._id });
     }
 
     res.status(201).json({ success: true, data: order });
@@ -129,7 +128,7 @@ const createOrder = async (req, res, next) => {
 
 const getMyOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const orders = await Order.find({ user: req.user._id });
     res.json({ success: true, data: orders });
   } catch (error) {
     next(error);
@@ -144,7 +143,7 @@ const getOrderById = async (req, res, next) => {
     }
 
     const isOwner =
-      order.user && req.user && order.user.toString() === req.user._id.toString();
+      order.user && req.user && String(order.user) === String(req.user._id);
     if (!isOwner && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Not authorized to view this order' });
     }

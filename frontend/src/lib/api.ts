@@ -15,6 +15,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 export const api = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
+  /** Fail fast when local API/Mongo is down instead of hanging the storefront */
+  timeout: 12000,
 });
 
 api.interceptors.request.use((config) => {

@@ -111,10 +111,10 @@ const FULLFIT_BEIGE = "#f3ebe0";
 /** Shirts room wall — zoomed out + lower crop so plaster shows, not window sky */
 const FULLFIT_WALL = {
   src: "/rooms/beige-room-wall.jpg",
-  /** % of stage; lower zoom = more wall visible */
-  bgWidthPct: 118,
-  wallPosY: 52,
-  wallZoom: 0.62,
+  /** Zoomed-in framing (same as earlier Full Fit wall) */
+  bgWidthPct: 165,
+  wallPosY: 48,
+  wallZoom: 1.05,
 };
 
 function ParadeArrow({
@@ -158,6 +158,29 @@ function ParadeArrow({
   );
 }
 
+/** Hairline between jacket / pants / shoes — same panel color, clear split */
+function ShopDivider() {
+  return (
+    <div
+      className="pointer-events-none my-1 flex w-full shrink-0 items-center gap-2 px-1"
+      aria-hidden
+    >
+      <span
+        className="h-px min-w-0 flex-1"
+        style={{ background: "rgba(8, 59, 63, 0.28)" }}
+      />
+      <span
+        className="h-1 w-1 shrink-0 rounded-full"
+        style={{ background: "rgba(8, 59, 63, 0.35)" }}
+      />
+      <span
+        className="h-px min-w-0 flex-1"
+        style={{ background: "rgba(8, 59, 63, 0.28)" }}
+      />
+    </div>
+  );
+}
+
 /** One of three equal shop cells — image on top, name + price left below */
 function ShopCell({
   product,
@@ -170,8 +193,8 @@ function ShopCell({
   const visible = showTee && nested ? nested : product;
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col border-b border-teal-deep/10 last:border-b-0">
-      <div className="relative min-h-0 flex-1 overflow-hidden">
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="relative min-h-0 flex-1 overflow-hidden px-0.5">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={visible._id}
@@ -380,7 +403,9 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
       >
         <div className="flex min-h-0 flex-1 flex-col">
           <ShopCell product={current.outer} nested={current.tee} />
+          <ShopDivider />
           <ShopCell product={current.pants} />
+          <ShopDivider />
           <ShopCell product={current.shoes} />
         </div>
 
