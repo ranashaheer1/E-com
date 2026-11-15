@@ -12,6 +12,12 @@ const nextConfig = {
       },
     ],
   },
+  // Bundle Express API deps for the catch-all serverless route
+  experimental: {
+    outputFileTracingIncludes: {
+      "/api/**": ["./server/**/*"],
+    },
+  },
 };
 
 export default nextConfig;

@@ -10,12 +10,18 @@ import type {
   User,
 } from "./types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+/**
+ * Same-origin `/api` on Vercel (Next + Express catch-all).
+ * Override with NEXT_PUBLIC_API_URL only if API is hosted separately.
+ */
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL?.trim() ||
+  (typeof window !== "undefined" ? "/api" : "http://127.0.0.1:3000/api");
 
 export const api = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
-  /** Fail fast when local API/Mongo is down instead of hanging the storefront */
+  /** Fail fast when API/DB is down instead of hanging the storefront */
   timeout: 12000,
 });
 

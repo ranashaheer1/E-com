@@ -104,36 +104,53 @@ function parseJson(value, fallback) {
 }
 
 async function connectDB() {
-  const host = process.env.MYSQL_HOST || '127.0.0.1';
-  const port = Number(process.env.MYSQL_PORT || 3306);
-  const user = process.env.MYSQL_USER || 'root';
-  const password = process.env.MYSQL_PASSWORD ?? '';
-  const database = process.env.MYSQL_DATABASE || 'unknown_ecommerce';
+  if (pool) return pool;
 
-  // Ensure database exists (connect without db first)
-  const bootstrap = await mysql.createConnection({
-    host,
-    port,
-    user,
-    password,
-    multipleStatements: true,
-  });
-  await bootstrap.query(
-    `CREATE DATABASE IF NOT EXISTS \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
-  );
-  await bootstrap.end();
+  const uri = process.env.DATABASE_URL || process.env.MYSQL_URL || '';
+  const connectionLimit = Number(process.env.MYSQL_POOL_SIZE || 5);
 
-  pool = mysql.createPool({
-    host,
-    port,
-    user,
-    password,
-    database,
-    waitForConnections: true,
-    connectionLimit: 10,
-    namedPlaceholders: true,
-    timezone: 'Z',
-  });
+  if (uri) {
+    pool = mysql.createPool({
+      uri,
+      waitForConnections: true,
+      connectionLimit,
+      namedPlaceholders: true,
+      timezone: 'Z',
+      ssl: process.env.MYSQL_SSL === 'false' ? undefined : { rejectUnauthorized: false },
+    });
+  } else {
+    const host = process.env.MYSQL_HOST || '127.0.0.1';
+    const port = Number(process.env.MYSQL_PORT || 3306);
+    const user = process.env.MYSQL_USER || 'root';
+    const password = process.env.MYSQL_PASSWORD ?? '';
+    const database = process.env.MYSQL_DATABASE || 'unknown_ecommerce';
+
+    if (process.env.MYSQL_SKIP_CREATE_DB !== 'true') {
+      const bootstrap = await mysql.createConnection({
+        host,
+        port,
+        user,
+        password,
+        multipleStatements: true,
+      });
+      await bootstrap.query(
+        `CREATE DATABASE IF NOT EXISTS \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
+      );
+      await bootstrap.end();
+    }
+
+    pool = mysql.createPool({
+      host,
+      port,
+      user,
+      password,
+      database,
+      waitForConnections: true,
+      connectionLimit,
+      namedPlaceholders: true,
+      timezone: 'Z',
+    });
+  }
 
   const conn = await pool.getConnection();
   try {
@@ -147,7 +164,11 @@ async function connectDB() {
     conn.release();
   }
 
-  console.log(`MySQL connected: ${host}:${port}/${database}`);
+  console.log(
+    uri
+      ? 'MySQL connected via DATABASE_URL / MYSQL_URL'
+      : `MySQL connected: ${process.env.MYSQL_HOST || '127.0.0.1'}`
+  );
   return pool;
 }
 

@@ -13,6 +13,7 @@ import {
 } from "@/lib/winterLooks";
 import { useCart } from "@/context/CartContext";
 import { useCartUI } from "@/context/CartUIContext";
+import { ShopBagButton } from "@/components/cart/ShopBagButton";
 import {
   FULL_FIT_SECTION_DEFAULT,
   FULLFIT_VISIBLE_SLOTS,
@@ -327,6 +328,7 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
   const dummies = dummiesForBreakpoint(bp);
   const isDesktop = bp === "desktop";
   const isPhone = bp === "phone";
+  const isTablet = bp === "tablet";
 
   const looks = useMemo(() => resolveLooks(products), [products]);
   const [active, setActive] = useState(0);
@@ -394,23 +396,38 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
         style={{ background: FULLFIT_BEIGE }}
         aria-hidden
       >
-        <Image
-          src={FULLFIT_WALL.src}
-          alt=""
-          width={2307}
-          height={1540}
-          unoptimized
-          priority
-          sizes="(max-width: 1023px) 100vw, 70vw"
-          className="absolute left-1/2 h-auto max-w-none"
-          style={{
-            width: `${isPhone ? 140 : FULLFIT_WALL.bgWidthPct}%`,
-            top: `${FULLFIT_WALL.wallPosY}%`,
-            transform: `translate(-50%, -50%) scale(${
-              isPhone ? 0.95 : FULLFIT_WALL.wallZoom
-            })`,
-          }}
-        />
+        {/* Phone/iPad: cover-fill + zoom so no beige bands; desktop keeps locked framing */}
+        {!isDesktop ? (
+          <Image
+            src={FULLFIT_WALL.src}
+            alt=""
+            fill
+            unoptimized
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+            style={{
+              transform: `scale(${isPhone ? 1.28 : 1.18})`,
+              transformOrigin: "center 42%",
+            }}
+          />
+        ) : (
+          <Image
+            src={FULLFIT_WALL.src}
+            alt=""
+            width={2307}
+            height={1540}
+            unoptimized
+            priority
+            sizes="70vw"
+            className="absolute left-1/2 h-auto max-w-none"
+            style={{
+              width: `${FULLFIT_WALL.bgWidthPct}%`,
+              top: `${FULLFIT_WALL.wallPosY}%`,
+              transform: `translate(-50%, -50%) scale(${FULLFIT_WALL.wallZoom})`,
+            }}
+          />
+        )}
         <div className="shirt-studio-atmosphere absolute inset-0" />
       </div>
 
@@ -454,6 +471,16 @@ export function FullFitLookbook({ products, loading }: FullFitLookbookProps) {
 
       <ParadeArrow dir="left" onClick={() => go(-1)} compact={!isDesktop} />
       <ParadeArrow dir="right" onClick={() => go(1)} compact={!isDesktop} />
+
+      {/* Kraft bag — fly-to target; click opens cart. Bottom-left empty corner. */}
+      <ShopBagButton
+        className={cn(
+          "absolute z-[45]",
+          isPhone && "bottom-3 left-3 w-[58px]",
+          isTablet && "bottom-4 left-4 w-[72px]",
+          isDesktop && "bottom-[3%] left-[3%] w-[96px]"
+        )}
+      />
 
       <p className="absolute bottom-2 left-1/2 z-50 -translate-x-1/2 rounded-full bg-white/85 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-teal-deep/65 shadow-sm backdrop-blur-sm sm:bottom-3">
         {safeIndex + 1} / {n}
